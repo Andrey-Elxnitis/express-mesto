@@ -1,11 +1,7 @@
 const router = require('express').Router();
-
-// json список карточек
-const cards = require('../data/cards.json');
+const { getCards } = require('../controllers/cards.js');
 
 // при запросе показываем список карточек
-router.get('/cards', (req, res) => {
-  res.send(cards);
-});
+router.get('/cards', getCards);
 
 module.exports = router;
