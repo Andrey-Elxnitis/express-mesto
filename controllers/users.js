@@ -1,32 +1,76 @@
-const path = require('path');
-const readFile = require('../helpers/readFile.js');
+const User = require('../models/user');
 
-// функция отвечает за отображение списка пользователей по запросу '/users'
-const getUsers = (req, res) => readFile(path.join(__dirname, '..', 'data', 'user.json'))
-  .then((data) => {
-    res.status(200).send(JSON.parse(data));
-  })
-  .catch((err) => {
-    res.status(500).send({ message: err.message });
-  });
+const getUsers = (req, res) => {
+  User.find({})
+    .then((users) => res.status(200).send(users))
+    .catch((err) => res.status(500).send({ message: err.message }));
+};
 
-// функция отвечает за отображение пользователя по id запрос '/users/:id'
-const getUserById = (req, res) => {
-  readFile(path.join(__dirname, '..', 'data', 'user.json'))
-    .then((data) => {
-      const user = JSON.parse((data)).find((item) => item._id === req.params.id);
-      if (!user) {
-        res.status(404).send({ message: `Нет пользователя с id ${req.params.id}` });
-        return;
-      }
-      res.status(200).send(user);
-    })
+const getUserId = (req, res) => {
+  User.findById(req.params.id)
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
-      res.status(500).send({ message: err.message });
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(404).send({ message: 'Такого пользователя нет' });
+      }
+      return res.status(500).send({ message: err.message });
+    });
+};
+
+const createUser = (req, res) => {
+  const { name, about, avatar } = req.body;
+  console.log(req.body);
+
+  User.create({ name, about, avatar })
+    .then((user) => res.status(200).send(user))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: 'Переданы некорректные данные' });
+      }
+      return res.status(500).send({ message: err.message });
+    });
+};
+
+// при запросе обновляем данные пользователя
+const changeUser = (req, res) => {
+  const { name, about } = req.body;
+
+  User.findOneAndUpdate({ _id: req.user._id }, { name, about }, {
+    new: true,
+    runValidators: true,
+    upsert: false,
+  })
+    .then((user) => res.status(200).send(user))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: 'Переданы некорректные данные' });
+      }
+      return res.status(500).send({ message: err.message });
+    });
+};
+
+// при запросе обновляем аватар пользователя
+const updateUserAvatar = (req, res) => {
+  const { avatar } = req.body;
+
+  User.findOneAndUpdate({ _id: req.user._id }, { avatar }, {
+    new: true,
+    runValidators: true,
+    upsert: false,
+  })
+    .then((user) => res.status(200).send(user))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: 'Переданы некорректные данные' });
+      }
+      return res.status(500).send({ message: err.message });
     });
 };
 
 module.exports = {
   getUsers,
-  getUserById,
+  getUserId,
+  createUser,
+  changeUser,
+  updateUserAvatar,
 };
