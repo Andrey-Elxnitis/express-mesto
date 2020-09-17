@@ -24,7 +24,12 @@ const createCard = (req, res) => {
 // по запросу удаляем карточку
 const deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
-    .then((card) => res.status(200).send(card))
+    .then((card) => {
+      if (card === null || undefined) {
+        return res.status(404).send({ message: 'Упс, такой карточки не существует' });
+      }
+      return res.status(200).send(card);
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(404).send({ message: 'Карточка не найдена или вы не являетесь владельцем карточки' });
@@ -40,7 +45,12 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((likes) => res.status(200).send(likes))
+    .then((likes) => {
+      if (likes === null || undefined) {
+        return res.status(404).send({ message: 'Упс, такой карточки не существует' });
+      }
+      return res.status(200).send(likes);
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(404).send({ message: 'Упс, такой карточки нет' });
@@ -56,7 +66,12 @@ const deleteLikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((likes) => res.status(200).send(likes))
+    .then((likes) => {
+      if (likes === null || undefined) {
+        return res.status(404).send({ message: 'Упс, такой карточки не существует' });
+      }
+      return res.status(200).send(likes);
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(404).send({ message: 'Упс, такой карточки нет' });

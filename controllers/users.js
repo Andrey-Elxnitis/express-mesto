@@ -10,7 +10,12 @@ const getUsers = (req, res) => {
 // по запросу возвращаем пользователя по id
 const getUserId = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.status(200).send({ data: user }))
+    .then((user) => {
+      if (user === null || undefined) {
+        return res.status(404).send({ message: 'Такого пользователя не существует' });
+      }
+      return res.status(200).send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(404).send({ message: 'Упс, такого пользователя нет' });
